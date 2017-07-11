@@ -75,6 +75,7 @@ type Client interface {
 
 	// Create a topic
 	CreateTopic(topic string, numPartitions int32, replicationFactor int16, configs map[string]string, timeout int32) error
+	DeleteTopic(topic string, timeout int32) error
 }
 
 const (
@@ -794,6 +795,35 @@ func (client *client) getConsumerMetadata(consumerGroup string, attemptsRemainin
 	Logger.Println("client/coordinator no available broker to send consumer metadata request to")
 	client.resurrectDeadBrokers()
 	return retry(ErrOutOfBrokers)
+}
+
+func (client *client) DeleteTopic(topic string, timeout int32) error {
+	if client.Closed() {
+		return ErrClosedClient
+	}
+	deleteTopicsRequest := &DeleteTopicsRequest{
+		DeleteTopicRequests: []DTopic{DTopic{Topic: topic}},
+		Timeout:             timeout,
+	}
+
+	broker := client.controller()
+	if broker != nil {
+		Logger.Printf("Deleting topic %v on broker %v\n", topic, broker.addr)
+		deleteTopicsResponse, err := broker.DeleteTopics(deleteTopicsRequest)
+
+		if err != nil {
+			return err
+		}
+
+		kafkaErr := deleteTopicsResponse.DeleteTopicResponses[0].Err
+
+		if kafkaErr != ErrNoError {
+			return kafkaErr
+		}
+		return nil
+	}
+	return ErrOutOfBrokers
+
 }
 
 func (client *client) CreateTopic(topic string, numPartitions int32,
