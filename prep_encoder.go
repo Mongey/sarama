@@ -13,6 +13,10 @@ type prepEncoder struct {
 
 // primitives
 
+func (pe *prepEncoder) putBool(in bool) {
+	pe.length++
+}
+
 func (pe *prepEncoder) putInt8(in int8) {
 	pe.length++
 }

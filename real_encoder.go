@@ -15,6 +15,15 @@ type realEncoder struct {
 
 // primitives
 
+func (re *realEncoder) putBool(in bool) {
+	bitSetVar := byte(0)
+	if in {
+		bitSetVar = byte(1)
+	}
+	re.raw[re.off] = bitSetVar
+	re.off++
+}
+
 func (re *realEncoder) putInt8(in int8) {
 	re.raw[re.off] = byte(in)
 	re.off++

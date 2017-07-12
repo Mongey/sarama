@@ -7,6 +7,7 @@ import "github.com/rcrowley/go-metrics"
 // not about how a string is represented in Kafka.
 type packetEncoder interface {
 	// Primitives
+	putBool(in bool)
 	putInt8(in int8)
 	putInt16(in int16)
 	putInt32(in int32)

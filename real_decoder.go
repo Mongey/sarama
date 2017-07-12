@@ -17,6 +17,15 @@ type realDecoder struct {
 }
 
 // primitives
+func (rd *realDecoder) getBool() (bool, error) {
+	if rd.remaining() < 1 {
+		rd.off = len(rd.raw)
+		return false, ErrInsufficientData
+	}
+	tmp := int8(rd.raw[rd.off])
+	rd.off++
+	return (tmp == 1), nil
+}
 
 func (rd *realDecoder) getInt8() (int8, error) {
 	if rd.remaining() < 1 {
