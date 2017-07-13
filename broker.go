@@ -723,3 +723,15 @@ func (b *Broker) DeleteTopics(request *DeleteTopicsRequest) (*DeleteTopicsRespon
 
 	return response, nil
 }
+
+func (b *Broker) AlterConfigs(request *AlterConfigRequest) (*AlterConfigResponse, error) {
+	response := new(AlterConfigResponse)
+
+	err := b.sendAndReceive(request, response)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

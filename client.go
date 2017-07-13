@@ -76,6 +76,7 @@ type Client interface {
 	// Create a topic
 	CreateTopic(topic string, numPartitions int32, replicationFactor int16, configs map[string]string, timeout int32) error
 	DeleteTopic(topic string, timeout int32) error
+	AlterConfig(entity int8, name string, config map[string]string, validate bool) error
 }
 
 const (
@@ -801,6 +802,7 @@ func (client *client) DeleteTopic(topic string, timeout int32) error {
 	if client.Closed() {
 		return ErrClosedClient
 	}
+
 	deleteTopicsRequest := &DeleteTopicsRequest{
 		DeleteTopicRequests: []DTopic{DTopic{Topic: topic}},
 		Timeout:             timeout,
@@ -822,8 +824,8 @@ func (client *client) DeleteTopic(topic string, timeout int32) error {
 		}
 		return nil
 	}
-	return ErrOutOfBrokers
 
+	return ErrOutOfBrokers
 }
 
 func (client *client) CreateTopic(topic string, numPartitions int32,
@@ -866,4 +868,46 @@ func (client *client) CreateTopic(topic string, numPartitions int32,
 		return nil
 	}
 	return ErrOutOfBrokers
+}
+
+func (client *client) AlterConfig(entity int8, name string, opts map[string]string, validate bool) error {
+	if client.Closed() {
+		return ErrClosedClient
+	}
+
+	entries := mapToConfigEntry(opts)
+	alterConfigRequest := &AlterConfigRequest{
+		Resources: []AlterConfigResource{
+			AlterConfigResource{
+				Type:          entity,
+				Name:          name,
+				ConfigEntries: entries,
+			},
+		},
+		ValidateOnly: validate,
+	}
+	broker := client.controller()
+	if broker != nil {
+		Logger.Printf("Altering Config %v on %v\n", alterConfigRequest, broker.addr)
+
+		_, err := broker.AlterConfigs(alterConfigRequest)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return ErrOutOfBrokers
+}
+
+func mapToConfigEntry(in map[string]string) []ConfigEntry {
+	entries := make([]ConfigEntry, len(in))
+	i := 0
+	for k, v := range in {
+		entries[i] = ConfigEntry{Name: k, Value: v}
+		i += 1
+	}
+	return entries
 }
