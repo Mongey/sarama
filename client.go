@@ -802,6 +802,7 @@ func (client *client) DeleteTopic(topic string, timeout int32) error {
 	if client.Closed() {
 		return ErrClosedClient
 	}
+
 	deleteTopicsRequest := &DeleteTopicsRequest{
 		DeleteTopicRequests: []DTopic{DTopic{Topic: topic}},
 		Timeout:             timeout,
@@ -823,8 +824,8 @@ func (client *client) DeleteTopic(topic string, timeout int32) error {
 		}
 		return nil
 	}
-	return ErrOutOfBrokers
 
+	return ErrOutOfBrokers
 }
 
 func (client *client) CreateTopic(topic string, numPartitions int32,
